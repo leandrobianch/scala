@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "scala",
+            "name": "Debug Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "args": [],
+            "jvmOptions": []
+        },
+        {
+            "type": "scala",
+            "name": "Debug Current Test File",
+            "request": "launch",
+            "testClass": "MainTest"
+        },
+        {
+            "type": "scala",
+            "name": "Debug Docker",
+            "request": "launch",
+            "mainClass": "Main",
+            "args": [],        
+            "env": {
+                "JAVA_OPTS": "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+            }
+        }
+    ]
+}

@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    ports:
+      - "10000:10000" # Blob service
+      - "10001:10001" # Queue service
+      - "10002:10002" # Table service
+    volumes:
+      - azurite_data:/data
+    environment:
+      - AZURITE_ACCOUNTS=dev:MTIzNDU2Nzg5YWJjZGVm
+
+  scala-sbt:
+    container_name: scala-sbt
+    build:
+      context: ./ # Dockerfile para o Scala
+      dockerfile: Dockerfile
+    depends_on:
+      - azurite
+    environment:
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=dev;AccountKey=MTIzNDU2Nzg5YWJjZGVm;BlobEndpoint=http://azurite:10000/dev;
+      - STORAGE_PATH=wasbs://dev@azurite:10000/dev/output.parquet
+    volumes:
+      - ./projetoNome:/app
+      - ./host-shared-jar:/app/target # Volume compartilhado para o JAR compilado
+      - ./projetoNome/src:/files # Volume compartilhado para o FILE
+    # command: >
+    #   sbt clean package # Compila o código e gera o JAR
+
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_LOCAL_IP=spark-master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark          
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    depends_on:
+      - azurite
+
+  spark-worker:
+    image: bitnami/spark:3.5
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_LOCAL_IP=spark-worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=2 # Número de núcleos de CPU
+      - SPARK_WORKER_MEMORY=2G # Memória alocada para o worker       
+      - STORAGE_PATH=wasbs://dev@azurite:10000/dev/output.parquet
+      - INPUT_PATH=/files/fake.txt
+    ports:
+    - "8081:8081"      
+    depends_on:
+      - spark-master
+      - scala-sbt
+    volumes:
+      - ./host-shared-jar:/app/target # Volume compartilhado para acessar o JAR compilado
+      - ./projetoNome/src:/files # Volume compartilhado para o FILE 
+    command: >
+      /opt/bitnami/spark/bin/spark-submit
+      --class Main
+      --master spark://spark-master:7077
+      --deploy-mode client
+      /app/target/scala-2.13/projetonome_2.13-0.1.0-SNAPSHOT.jar MinhaAplicacaoSpark
+
+volumes:
+  azurite_data:
