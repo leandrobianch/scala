@@ -5,10 +5,6 @@ import com.azure.storage.blob.{BlobServiceClientBuilder, BlobContainerClient}
 object Main {
   def main(args: Array[String]): Unit = {
     println("Iniciando aplicação beta")
-    if (args.isEmpty) {
-      println("Erro: O nome da aplicação deve ser passado como argumento.")
-      System.exit(1)
-    }
 
     // Nome da aplicação passado como argumento
     val appName = args(0)

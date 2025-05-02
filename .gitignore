@@ -5,3 +5,4 @@ projetoNome/project/metals.sbt
 projetoNome/project/project
 projetoNome/project/target
 projetoNome/target
+host-shared-jar

@@ -7,13 +7,15 @@ RUN apt-get update && apt-get install -y curl
 # Copy the project files directly into /app
 COPY ./projetoNome ./
 
+# Verificar o conteúdo do diretório antes de compilar (para depuração)
+RUN ls -la /app
+
 # Initial compilation
 #RUN sbt clean compile
-# Compilar o projeto e gerar o JAR
 RUN sbt clean package
 
-#EXPOSE 5005
+# Verificar o conteúdo do diretório de saída (para depuração)
+RUN ls -la /app/target
 
-#ENTRYPOINT ["sbt"]
-
-#CMD ["run"]
+EXPOSE 5005
+CMD ["sh", "-c", "while true; do if [ -d '/app/target' ]; then echo 'working'; ls /app/target; else echo '/app/target does not exist'; exit 1 fi; sleep 5; done"]
