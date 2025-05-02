@@ -18,4 +18,5 @@ RUN sbt clean package
 RUN ls -la /app/target
 
 EXPOSE 5005
-CMD ["sh", "-c", "while true; do if [ -d '/app/target' ]; then echo 'working'; ls /app/target; else echo '/app/target does not exist'; exit 1 fi; sleep 5; done"]
+# Loop infinito para verificar se o diretório /app/target existe
+CMD ["sh", "-c", "while true; do if [ -d '/app/target' ]; then echo 'working'; ls /app/target; else echo '/app/target does not exist'; exit 1; fi; sleep 5; done"]
